@@ -14,15 +14,47 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'ADHD Reminder',
-      home: RandomWords(),
+      home: DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            body: const TabBarView(
+              children: [
+                RandomWords(),
+                Icon(Icons.directions_transit),
+              ],
+            ),
+            appBar: AppBar(
+              bottom: const TabBar(
+                tabs: [
+                  Tab(icon: Icon(Icons.record_voice_over)),
+                  Tab(icon: Icon(Icons.history)),
+                ],
+              ),
+            ),
+          )
+      ),
     );
   }
 }
 
 
+class Notes extends StatefulWidget {
+  const Notes({Key? key}) : super(key: key);
 
+  @override
+  State<Notes> createState() => _NotesState();
+}
+
+class _NotesState extends State<Notes> {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    throw UnimplementedError();
+  }
+
+}
 
 
 class RandomWords extends StatefulWidget {
@@ -41,7 +73,9 @@ class _RandomWordsState extends State<RandomWords> {
   void _pushSaved() {
     Navigator.of(context).push(
       // Add lines from here...
+      // The route / the screen
       MaterialPageRoute<void>(
+        // The content of the route/screen.
         builder: (context) {
           final tiles = _saved.map(
                 (pair) {

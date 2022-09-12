@@ -6,10 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final List<Note> _notesList = [];
-
 void main() {
-  _notesList.add(Note(DateTime.now(), textContent: "some text"));
+  //_notesList.add(Note(DateTime.now(), textContent: "some text"));
   runApp(const MyApp());
 }
 
@@ -80,18 +78,41 @@ class NoteList extends StatefulWidget {
 }
 
 class _NoteListState extends State<NoteList> {
+  final List<Note> _notes = <Note>[];
+
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView.builder(
+        itemCount: _notes.length,
+        itemBuilder: (context, i) {
+          if (_notes.isEmpty) {
+            return const Text("no note");
+          }
 
+          return _notes[i];
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            _notes.add(Note(DateTime.now(), textContent: "some text"));
+          });
+        },
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.navigation),
+      ),
+    );
   }
 }
 
 class Note extends StatefulWidget {
   final DateTime remindTime;
+  final DateTime creationTime;
   final String? textContent;
   final Object? voiceContent;
 
-  Note(this.remindTime, {super.key, this.textContent, this.voiceContent}) {
+  Note(this.remindTime, {super.key, this.textContent, this.voiceContent}) : creationTime = DateTime.now() {
     if(textContent == null && voiceContent == null)
       throw ArgumentError("One of the parameters must be provided.");
     if (textContent != null && voiceContent != null)
@@ -103,8 +124,6 @@ class Note extends StatefulWidget {
 }
 
 class _NoteState extends State<Note> {
-  final _createdTimestamp = DateTime.now().millisecondsSinceEpoch;
-
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +136,6 @@ class _NoteState extends State<Note> {
         color: Colors.red,
         semanticLabel: 'Save',
       ),
-      onTap: () => _notesList.add(Note(DateTime.now(), textContent: "some text2"))
     );
   }
 }

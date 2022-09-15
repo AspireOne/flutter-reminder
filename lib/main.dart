@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum ActionButtonType { voiceNote, textNote }
@@ -67,7 +68,7 @@ class _NoteListState extends State<NoteList> {
 
   @override
   Widget build(BuildContext context) {
-    _notes.add(Note(DateTime.now(), textContent: "some text")); // TODO: Remove this debug.
+    _notes.add(Note(DateTime.now(), textContent: "This is some note that you can note.")); // TODO: Remove this debug.
     Widget body;
     if (_notes.isEmpty) {
       body = const Center(
@@ -100,12 +101,12 @@ class _NoteListState extends State<NoteList> {
 }
 
 class Note extends StatefulWidget {
-  final DateTime remindTime;
+  final DateTime dueTime;
   final DateTime creationTime;
   final String? textContent;
   final Object? voiceContent;
 
-  Note(this.remindTime, {super.key, this.textContent, this.voiceContent}) : creationTime = DateTime.now() {
+  Note(this.dueTime, {super.key, this.textContent, this.voiceContent}) : creationTime = DateTime.now() {
     if(textContent == null && voiceContent == null)
       throw ArgumentError("One of the parameters must be provided.");
     if (textContent != null && voiceContent != null)
@@ -117,19 +118,36 @@ class Note extends StatefulWidget {
 }
 
 class _NoteState extends State<Note> {
+
+  String formatDifference(Duration difference) {
+    final bool inMinutes = difference.inMinutes < 60;
+    final value = inMinutes ? difference.inHours : difference.inMinutes;
+
+    final unitFormatFive = inMinutes ? "minut" : "hodin";
+    final unitFormatTwo = inMinutes ? "minuty" : "hodiny";
+    final unitFormatOne = inMinutes ? "minuta" : "hodina";
+    final unit = value >= 5 ? unitFormatFive : value >= 2 ? unitFormatTwo : unitFormatOne;
+    return "$value $unit";
+  }
+
   @override
   Widget build(BuildContext context) {
+    final difference = widget.creationTime.difference(widget.dueTime);
+    final differenceFormatted = formatDifference(difference);
+    final creationTimeFormatted = DateFormat("d.M. H:m").format(widget.creationTime);
+    final dueTimeFormatted = "Proběhne za $differenceFormatted (v ${DateFormat("H:m").format(widget.dueTime)})";
+
     return Card(
       child: Padding(
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              "zadáno 1.9. 16:00",
+            Text(
+              "zadáno $creationTimeFormatted",
               textAlign: TextAlign.left,
-              style: TextStyle(
+              style: const TextStyle(
                   color: Colors.grey
               ),
             ),
@@ -142,9 +160,9 @@ class _NoteState extends State<Note> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Text(
-                  "Proběhne za 30 minut",
-                  style: TextStyle(
+                Text(
+                  dueTimeFormatted,
+                  style: const TextStyle(
                     color: Colors.grey
                   ),
                   textAlign: TextAlign.left,

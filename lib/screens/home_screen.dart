@@ -1,7 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../widgets/note_list.dart';
+import '../widgets/note_list_tab.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -13,8 +12,8 @@ class HomeScreen extends StatelessWidget {
         child: Scaffold(
           body: const TabBarView(
             children: [
-              NoteList(),
-              Icon(Icons.directions_transit),
+              NoteListTab(tabType: TabType.ongoingNotes),
+              NoteListTab(tabType: TabType.notesHistory),
             ],
           ),
           appBar: AppBar(

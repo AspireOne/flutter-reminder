@@ -14,49 +14,36 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
   final _player = AudioPlayer();
   Duration _duration = const Duration();
   Duration _position = const Duration();
+  bool _isPlaying = false;
 
   @override
   void initState() {
     super.initState();
 
-/*    DefaultAssetBundle.of(context).load('assets/test_song.mp3').then((bytes) => {
-      _player.setSourceBytes(bytes.buffer.asUint8List())
-    });*/
-
-    _player.positionStream.listen((position) {
-      setState(() => _position = position);
+    // Because playingStream doesn't send an event when the player is finished.
+    _player.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) _player.stop();
     });
-    _player.playerStateStream.listen((playerState) {
-      setState((){});
-    });
-    _player.durationStream.listen((duration) {
-      setState(() => _duration = duration ?? const Duration());
-    });
+    _player.playingStream.listen((playing) => setState(() {
+      _isPlaying = playing;
+      // Otherwise the player doesn't seet back to zero automatically on stop.
+      if (!_isPlaying) _player.seek(Duration.zero);
+    }));
+    _player.positionStream.listen((position) => setState(() => _position = position));
+    _player.durationStream.listen((duration) => setState(() => _duration = duration ?? Duration.zero));
+    _player.setUrl("//samplelib.com/lib/preview/mp3/sample-3s.mp3");
   }
-
-  String formatDuration(Duration duration) => duration.toString().split('.').first.substring(2);
 
   @override
   Widget build(BuildContext context) {
     String timeInfo = "${formatDuration(_position)}/${formatDuration(_duration)}";
-    String buttonText;
-    switch (_player.playerState.playing) {
-      case true:
-        buttonText = "Stop";
-        break;
-      case false:
-      default:
-        buttonText = "Play";
-        break;
-    }
+    final buttonText = _isPlaying ? "Stop" : "Play";
 
     return Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           ElevatedButton(
-            onPressed: /*_duration.inSeconds == 0 ? null :*/ () => {
-              _player.playerState.playing ? _player.stop() : _player.play(),
-            },
+            onPressed: () => setState(() => _isPlaying ? _player.stop() : _player.play()),
             child: Text(buttonText),
           ),
           const SizedBox(width: 10),
@@ -64,4 +51,6 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
         ]
     );
   }
+
+  String formatDuration(Duration duration) => duration.toString().split('.').first.substring(2);
 }

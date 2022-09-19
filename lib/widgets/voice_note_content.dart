@@ -1,5 +1,6 @@
-import 'package:audioplayers/audioplayers.dart';
+
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
 class VoiceNoteContent extends StatefulWidget {
   final String audioPath;
@@ -22,16 +23,14 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
       _player.setSourceBytes(bytes.buffer.asUint8List())
     });*/
 
-    _player.setPlayerMode(PlayerMode.lowLatency);
-
-    _player.onDurationChanged.listen((duration) {
-      setState(() => _duration = duration);
-    });
-    _player.onPositionChanged.listen((position) {
+    _player.positionStream.listen((position) {
       setState(() => _position = position);
     });
-    _player.onPlayerStateChanged.listen((state) {
-      setState(() {});
+    _player.playerStateStream.listen((playerState) {
+      setState((){});
+    });
+    _player.durationStream.listen((duration) {
+      setState(() => _duration = duration ?? const Duration());
     });
   }
 
@@ -41,14 +40,11 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
   Widget build(BuildContext context) {
     String timeInfo = "${formatDuration(_position)}/${formatDuration(_duration)}";
     String buttonText;
-    switch (_player.state) {
-      case PlayerState.playing:
-        buttonText = "Pause";
+    switch (_player.playerState.playing) {
+      case true:
+        buttonText = "Stop";
         break;
-      case PlayerState.paused:
-        buttonText = "Resume";
-        break;
-      case PlayerState.stopped:
+      case false:
       default:
         buttonText = "Play";
         break;
@@ -59,7 +55,7 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
         children: [
           ElevatedButton(
             onPressed: /*_duration.inSeconds == 0 ? null :*/ () => {
-              _player.state == PlayerState.playing ? _player.stop() : _player.resume(),
+              _player.playerState.playing ? _player.stop() : _player.play(),
             },
             child: Text(buttonText),
           ),

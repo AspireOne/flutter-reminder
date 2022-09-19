@@ -31,7 +31,7 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
     }));
     _player.positionStream.listen((position) => setState(() => _position = position));
     _player.durationStream.listen((duration) => setState(() => _duration = duration ?? Duration.zero));
-    _player.setUrl("//samplelib.com/lib/preview/mp3/sample-3s.mp3");
+    _player.setUrl("//samplelib.com/lib/preview/mp3/sample-3s.mp3"); // Place the real production code here instead when the time comes.
   }
 
   @override

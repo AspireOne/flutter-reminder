@@ -17,7 +17,11 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
   @override
   void initState() {
     super.initState();
-    _player.setSource(AssetSource('assets/test_song.mp3'));
+
+/*    DefaultAssetBundle.of(context).load('assets/test_song.mp3').then((bytes) => {
+      _player.setSourceBytes(bytes.buffer.asUint8List())
+    });*/
+
     _player.setPlayerMode(PlayerMode.lowLatency);
 
     _player.onDurationChanged.listen((duration) {

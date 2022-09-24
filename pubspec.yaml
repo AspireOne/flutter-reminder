@@ -41,6 +41,8 @@ dependencies:
   animated_list_plus: ^0.4.4
   assets_audio_player: ^3.0.5
   just_audio: ^0.9.29
+  flutter_portal: ^1.1.1
+  avatar_glow: ^2.0.2
 
 dev_dependencies:
   flutter_test:

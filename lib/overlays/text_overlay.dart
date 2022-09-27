@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_reminder/overlays/overlay.dart';
 
-class TextOverlay extends StatefulWidget {
-  final Function(String text, DateTime dueTime) onFinished;
+import 'base_note_overlay.dart';
 
-  const TextOverlay({Key? key, required this.onFinished}) : super(key: key);
+class TextOverlay extends NoteOverlay {
+  const TextOverlay({Key? key, super.onSuccessfullyFinished, super.onStartedPickingTime, /*super.onDismissed*/}) : super(key: key);
 
   @override
   State<TextOverlay> createState() => _TextOverlayState();
@@ -12,6 +13,6 @@ class TextOverlay extends StatefulWidget {
 class _TextOverlayState extends State<TextOverlay> {
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return GarbageOverlay(body: Container());
   }
 }

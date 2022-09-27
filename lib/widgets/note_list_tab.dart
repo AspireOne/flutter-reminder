@@ -1,6 +1,4 @@
-import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_portal/flutter_portal.dart';
 import 'package:uuid/uuid.dart';
 
 import '../overlays/recording_overlay.dart';
@@ -8,14 +6,13 @@ import '../overlays/text_overlay.dart';
 import 'note.dart';
 import 'note_list.dart';
 
-enum ActionButtonType { voiceNote, textNote }
-
-enum TabType { ongoingNotes, notesHistory }
+enum NoteState { oncoming, completed, all }
+enum NoteType { voiceNote, textNote }
 
 class NoteListTab extends StatefulWidget {
-  final TabType tabType;
+  final NoteState notesToShow;
 
-  const NoteListTab({Key? key, required this.tabType}) : super(key: key);
+  const NoteListTab({Key? key, required this.notesToShow}) : super(key: key);
 
   @override
   State<NoteListTab> createState() => _NoteListTabState();
@@ -24,150 +21,175 @@ class NoteListTab extends StatefulWidget {
 class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClientMixin<NoteListTab> {
   static final List<Note> _notes = <Note>[];
   static bool _notesInitialized = false;
-  bool _takingVoiceNote = false;
-  bool _takingTextNote = false;
+  double _voiceButtonOpacity = 1;
+  double _textButtonOpacity = 1;
 
   _NoteListTabState() {
     // TODO: Initialize notes from storage.
-    if (!_notesInitialized) {
-      _notesInitialized = true;
-    }
+    if (!_notesInitialized) _notesInitialized = true;
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    //final notesToShow = _notes.where((note) => widget.tabType == TabType.dueNotes ? note.).toList();
+    final notesToShow = _notes.where((note) {
+      switch (widget.notesToShow) {
+        case NoteState.completed:
+          return note.dueTime.isAfter(DateTime.now());
+        case NoteState.oncoming:
+          return note.dueTime.isBefore(DateTime.now());
+        default:
+          return true;
+      }
+    }).toList();
 
-    var body = Scaffold(
-        body: NoteList(
-          notes: _notes,
-          noNotesMessage: widget.tabType == TabType.ongoingNotes
-              ? "No ongoing notes"
-              : "No notes history",
+    return Scaffold(
+      floatingActionButton: _AddNoteButtons(
+        textButton: _AddNoteButton(
+          type: NoteType.textNote,
+          onPress: () {
+            setState(() {
+              _textButtonOpacity = 0;
+              _voiceButtonOpacity = 0;
+              _openOverlay(_getTextOverlay());
+            });
+          },
+          opacity: _textButtonOpacity,
         ),
-/*        // TODO: Do not show buttons in history tab.
-        floatingActionButton: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          _ActionButton(ActionButtonType.voiceNote, onPress: () {
-            _onNoteCreated(audioPath: "", dueTime: DateTime.now().add(Duration(minutes: 10)));
-            _takingVoiceNote = true;
-          }),
-          SizedBox(width: 25),
-          _ActionButton(ActionButtonType.textNote, onPress: () {
-            _takingTextNote = true;
-            _onNoteCreated(textContent: "this is a text note", dueTime: DateTime.now().add(Duration(minutes: 10)));
-          })
-        ])*/
-    );
-
-    Widget overlay;
-
-    if (_takingVoiceNote) {
-      overlay = RecordingOverlay(onFinished: (path, due) => _onNoteCreated(dueTime: due, audioPath: path));
-    }
-    else if (_takingTextNote) {
-      overlay = TextOverlay(onFinished: (text, due) => _onNoteCreated(dueTime: due, textContent: text));
-    }
-    else {
-      overlay = Container();
-    }
-    return Stack(
-      children: [
-        body,
-        overlay,
-        Scaffold(
-          // TODO: Do not show buttons in history tab.
-            floatingActionButton: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _ActionButton(ActionButtonType.voiceNote, onPress: () {
-                _onNoteCreated(audioPath: "", dueTime: DateTime.now().add(Duration(minutes: 10)));
-                _takingVoiceNote = true;
-              }),
-              SizedBox(width: 25),
-              _ActionButton(ActionButtonType.textNote, onPress: () {
-                _takingTextNote = true;
-                _onNoteCreated(textContent: "this is a text note", dueTime: DateTime.now().add(Duration(minutes: 10)));
-              })
-            ])
-        )
-      ]
-    );
-  }
-
-  void _onNoteCreated({String? audioPath, String? textContent, required DateTime dueTime}) {
-    final id = const Uuid().v4();
-    setState(() {
-      _takingVoiceNote = false;
-      _takingTextNote = false;
-      _notes.add(
-        Note(
-          id: id,
-          dueTime: dueTime,
-          recordingPath: audioPath,
-          textContent: textContent,
-          onDue: () {
-            // Defer the setState call to a next tick, otherwise an error is thrown.
-            Future.delayed(Duration.zero, () async {
-              setState(() => _notes.removeWhere((note) => note.id == id));
+        voiceButton: _AddNoteButton(
+          type: NoteType.voiceNote,
+          opacity: _voiceButtonOpacity,
+          onPress: () {
+            setState(() {
+              _textButtonOpacity = 0;
+              _voiceButtonOpacity = 0;
+              _openOverlay(_getRecordingOverlay());
             });
           },
         ),
-      );
-    });
+      ),
+      body: NoteList(
+        notes: notesToShow,
+        noNotesMessage: widget.notesToShow == NoteState.oncoming
+            ? "No oncoming notes"
+            : "No completed notes",
+      )
+    );
+  }
+
+  void _openOverlay(Widget overlay) async {
+    await Navigator.push(context, PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, _, __) => overlay
+    ));
+    _revertButtonsOpacity();
+  }
+
+  void _addNote({String? audioPath, String? textContent, required DateTime dueTime}) {
+    final id = const Uuid().v4();
+    final note = Note(
+      id: id,
+      dueTime: dueTime,
+      recordingPath: audioPath,
+      textContent: textContent,
+      onDue: () {
+        // Defer the setState call to a next tick, otherwise an error is thrown.
+        Future.delayed(Duration.zero, () async {
+          setState(() => _notes.removeWhere((note) => note.id == id));
+        });
+      },
+    );
+
+    _notes.add(note);
+  }
+
+  Widget _getRecordingOverlay() {
+    return RecordingOverlay(
+      onSuccessfullyFinished: (due, path) {
+        setState(() {
+          _addNote(dueTime: due, audioPath: path);
+          _revertButtonsOpacity();
+        });
+      },
+      /*onStartedPickingTime: () => setState(() => _voiceButtonOpacity = 0),*/
+      /*onDismissed: () => setState(_revertButtonsOpacity),*/
+    );
+  }
+
+  Widget _getTextOverlay() {
+    return TextOverlay(
+      onSuccessfullyFinished: (due, text) {
+        setState(() {
+          _addNote(dueTime: due, textContent: text);
+          _revertButtonsOpacity();
+        });
+      },
+        /*onDismissed: () => setState(_revertButtonsOpacity),*/
+    );
+  }
+
+  void _revertButtonsOpacity() {
+    _voiceButtonOpacity = 1;
+    _textButtonOpacity = 1;
   }
 
   @override
   bool get wantKeepAlive => true;
 }
 
-/*class _TextActionButton extends StatelessWidget {
-  final Function(Function(List<Note>)) updateNotes;
-  const _TextActionButton({Key? key, required this.updateNotes}) : super(key: key);
+class _AddNoteButtons extends StatefulWidget {
+  final Widget textButton;
+  final Widget voiceButton;
+
+  const _AddNoteButtons({Key? key, required this.textButton, required this.voiceButton}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return _ActionButton(ActionButtonType.textNote, onPress: () {
-      updateNotes((notes) {
-        final noteId = const Uuid().v4();
-        notes.add(
-          Note(
-            id: noteId,
-            dueTime: DateTime.now().add(const Duration(minutes: 26, hours: 0)),
-            textContent: "This is some note that you can note.",
-            onDue: () {
-              // Defer the setState call to a next tick, otherwise an error is thrown.
-              Future.delayed(Duration.zero, () async {
-                updateNotes((notes) => notes.removeWhere((note) => note.id == noteId));
-              });
-            },
-          ),
-        );
-      });
-    });
-  }
-}*/
+  State<_AddNoteButtons> createState() => _AddNoteButtonsState();
+}
 
-class _ActionButton extends StatelessWidget {
-  final ActionButtonType type;
+class _AddNoteButtonsState extends State<_AddNoteButtons> {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(width: 25),
+          widget.voiceButton,
+          const SizedBox(width: 25),
+          widget.textButton
+        ]
+    );
+  }
+}
+
+class _AddNoteButton extends StatelessWidget {
+  final NoteType type;
   final Function? onTouchDown;
   final Function? onTouchUp;
   final Function? onPress;
+  final double opacity;
 
-  const _ActionButton(this.type,
-      {super.key, this.onTouchDown, this.onTouchUp, this.onPress});
+  const _AddNoteButton({required this.type, this.opacity = 1,
+    this.onTouchDown, this.onTouchUp, this.onPress});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTapDown: (_) => onTouchDown?.call(),
       onTapUp: (_) => onTouchUp?.call(),
-      child: FloatingActionButton(
-        onPressed: () => onPress?.call(),
-        heroTag: type.toString(),
-        child: Icon(type == ActionButtonType.voiceNote
-            ? Icons.record_voice_over
-            : Icons.short_text_outlined),
-      ),
+      onTapCancel: () => onTouchUp?.call(),
+      child: AnimatedOpacity(
+          opacity: opacity,
+          duration: const Duration(milliseconds: 300),
+          child: FloatingActionButton(
+            onPressed: () => onPress?.call(),
+            heroTag: type.toString(),
+            child: Icon(type == NoteType.voiceNote
+                ? Icons.record_voice_over
+                : Icons.short_text_outlined),
+          )
+      )
     );
   }
 }

@@ -12,8 +12,8 @@ class HomeScreen extends StatelessWidget {
         child: Scaffold(
           body: const TabBarView(
             children: [
-              NoteListTab(tabType: TabType.ongoingNotes),
-              NoteListTab(tabType: TabType.notesHistory),
+              NoteListTab(notesToShow: NoteState.oncoming),
+              NoteListTab(notesToShow: NoteState.completed),
             ],
           ),
           appBar: AppBar(

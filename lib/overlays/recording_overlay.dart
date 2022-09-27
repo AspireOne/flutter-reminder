@@ -1,10 +1,12 @@
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 
-class RecordingOverlay extends StatefulWidget {
-  final Function(String audioPath, DateTime dueTime) onFinished;
+import 'base_note_overlay.dart';
+import 'overlay.dart';
 
-  const RecordingOverlay({Key? key, required this.onFinished}) : super(key: key);
+class RecordingOverlay extends NoteOverlay {
+
+  const RecordingOverlay({Key? key, super.onSuccessfullyFinished, super.onStartedPickingTime, /*super.onDismissed*/}) : super(key: key);
 
   @override
   State<RecordingOverlay> createState() => _RecordingOverlayState();
@@ -13,18 +15,22 @@ class RecordingOverlay extends StatefulWidget {
 class _RecordingOverlayState extends State<RecordingOverlay> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-        height: double.infinity,
-        width: double.infinity,
-        color: const Color.fromRGBO(0, 0, 0, 0.7),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _RecordingOverlayMicIcon(),
-            Text("6/10s"),
-            Text("Listening...", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))
-          ],
+    return GarbageOverlay(
+        body: Scaffold(
+          backgroundColor: Colors.black.withOpacity(0),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+          floatingActionButton: _RecordingStopButton(),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _RecordingOverlayMicIcon(),
+                Text("6/10s", style: TextStyle(color: Colors.white)),
+                Text("Listening...", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))
+              ],
+            ),
+          ),
         )
     );
   }
@@ -46,6 +52,41 @@ class _RecordingOverlayMicIcon extends StatelessWidget {
           child: const Icon(Icons.mic),
         ),
       ),
+    );
+  }
+}
+
+class _RecordingStopButton extends StatefulWidget {
+  final Function? onPress;
+  const _RecordingStopButton({Key? key, this.onPress}) : super(key: key);
+
+  @override
+  State<_RecordingStopButton> createState() => _RecordingStopButtonState();
+}
+
+class _RecordingStopButtonState extends State<_RecordingStopButton> {
+  double opacity = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(Duration.zero, () async {
+      setState(() => opacity = 1);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+        opacity: opacity,
+        duration: const Duration(milliseconds: 300),
+        child: FloatingActionButton(
+          //splashColor: Colors.red,
+          backgroundColor: Colors.red,
+          onPressed: () => widget.onPress?.call(),
+          child: const Icon(Icons.stop),
+        )
     );
   }
 }

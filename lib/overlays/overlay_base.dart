@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
-abstract class NoteOverlay extends StatefulWidget {
+// Superclass of all overlays.
+abstract class OverlayBase extends StatefulWidget {
   final Function(DateTime dueTime, String data)? onSuccessfullyFinished;
   //final Function? onDismissed;
   final Function? onStartedPickingTime;
 
-  const NoteOverlay({super.key, this.onSuccessfullyFinished, //this.onDismissed,
+  const OverlayBase({super.key, this.onSuccessfullyFinished, //this.onDismissed,
     this.onStartedPickingTime});
 }
 

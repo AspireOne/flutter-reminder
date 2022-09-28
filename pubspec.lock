@@ -8,20 +8,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.4.4"
-  assets_audio_player:
-    dependency: "direct main"
-    description:
-      name: assets_audio_player
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.5"
-  assets_audio_player_web:
-    dependency: transitive
-    description:
-      name: assets_audio_player_web
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.5"
   async:
     dependency: transitive
     description:
@@ -36,55 +22,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.10"
-  audioplayers:
-    dependency: "direct main"
-    description:
-      name: audioplayers
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.1"
-  audioplayers_android:
-    dependency: transitive
-    description:
-      name: audioplayers_android
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.1"
-  audioplayers_darwin:
-    dependency: transitive
-    description:
-      name: audioplayers_darwin
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.1"
-  audioplayers_linux:
-    dependency: transitive
-    description:
-      name: audioplayers_linux
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.0"
-  audioplayers_platform_interface:
-    dependency: transitive
-    description:
-      name: audioplayers_platform_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.0"
-  audioplayers_web:
-    dependency: transitive
-    description:
-      name: audioplayers_web
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.0"
-  audioplayers_windows:
-    dependency: transitive
-    description:
-      name: audioplayers_windows
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.0"
   avatar_glow:
     dependency: "direct main"
     description:
@@ -134,13 +71,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.5"
-  english_words:
-    dependency: "direct main"
-    description:
-      name: english_words
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "4.0.0"
   fake_async:
     dependency: transitive
     description:
@@ -174,13 +104,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
-  flutter_portal:
-    dependency: "direct main"
-    description:
-      name: flutter_portal
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.1.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -191,20 +114,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  http:
-    dependency: transitive
-    description:
-      name: http
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.13.5"
-  http_parser:
-    dependency: transitive
-    description:
-      name: http_parser
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "4.0.1"
   intl:
     dependency: "direct main"
     description:
@@ -276,7 +185,7 @@ packages:
     source: hosted
     version: "1.8.2"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       url: "https://pub.dartlang.org"
@@ -345,6 +254,48 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.2.4"
+  record:
+    dependency: "direct main"
+    description:
+      name: record
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "4.4.0"
+  record_linux:
+    dependency: transitive
+    description:
+      name: record_linux
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.3"
+  record_macos:
+    dependency: transitive
+    description:
+      name: record_macos
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.2"
+  record_platform_interface:
+    dependency: transitive
+    description:
+      name: record_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.5.0"
+  record_web:
+    dependency: transitive
+    description:
+      name: record_web
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.5.0"
+  record_windows:
+    dependency: transitive
+    description:
+      name: record_windows
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.6.2"
   rxdart:
     dependency: transitive
     description:

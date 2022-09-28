@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
 
 import '../overlays/recording_overlay.dart';
@@ -60,7 +61,8 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
         voiceButton: _AddNoteButton(
           type: NoteType.voiceNote,
           opacity: _voiceButtonOpacity,
-          onPress: () {
+          onPress: () async {
+            if (!(await Record().hasPermission())) return;
             setState(() {
               _textButtonOpacity = 0;
               _voiceButtonOpacity = 0;
@@ -86,8 +88,9 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
     _revertButtonsOpacity();
   }
 
-  void _addNote({String? audioPath, String? textContent, required DateTime dueTime}) {
-    final id = const Uuid().v4();
+  void _addNote({String? audioPath, String? textContent, String? id, required DateTime dueTime}) {
+    id ??= const Uuid().v4();
+
     final note = Note(
       id: id,
       dueTime: dueTime,
@@ -105,13 +108,15 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
   }
 
   Widget _getRecordingOverlay() {
+    final String id = const Uuid().v4();
     return RecordingOverlay(
       onSuccessfullyFinished: (due, path) {
         setState(() {
-          _addNote(dueTime: due, audioPath: path);
+          _addNote(dueTime: due, id: id, audioPath: path);
           _revertButtonsOpacity();
         });
       },
+      recordingId: id,
       /*onStartedPickingTime: () => setState(() => _voiceButtonOpacity = 0),*/
       /*onDismissed: () => setState(_revertButtonsOpacity),*/
     );

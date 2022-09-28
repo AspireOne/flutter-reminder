@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_reminder/overlays/overlay.dart';
+import 'package:flutter_reminder/overlays/garbage_overlay.dart';
 
-import 'base_note_overlay.dart';
+import 'overlay_base.dart';
 
-class TextOverlay extends NoteOverlay {
+class TextOverlay extends OverlayBase {
   const TextOverlay({Key? key, super.onSuccessfullyFinished, super.onStartedPickingTime, /*super.onDismissed*/}) : super(key: key);
 
   @override

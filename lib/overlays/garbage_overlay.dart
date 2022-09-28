@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+// The parent of all overlays. Don't question the name.
 class GarbageOverlay extends StatefulWidget {
   final Widget body;
 

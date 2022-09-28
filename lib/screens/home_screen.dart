@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../overlays/time_picker_overlay.dart';
 import '../widgets/note_list_tab.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -12,8 +13,9 @@ class HomeScreen extends StatelessWidget {
         child: Scaffold(
           body: const TabBarView(
             children: [
-              NoteListTab(notesToShow: NoteState.oncoming),
-              NoteListTab(notesToShow: NoteState.completed),
+              TimePickerOverlay()
+              /*NoteListTab(notesToShow: NoteState.oncoming),
+              NoteListTab(notesToShow: NoteState.completed),*/
             ],
           ),
           appBar: AppBar(

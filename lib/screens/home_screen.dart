@@ -13,9 +13,8 @@ class HomeScreen extends StatelessWidget {
         child: Scaffold(
           body: const TabBarView(
             children: [
-              TimePickerOverlay()
-              /*NoteListTab(notesToShow: NoteState.oncoming),
-              NoteListTab(notesToShow: NoteState.completed),*/
+              NoteListTab(notesToShow: NoteState.oncoming),
+              NoteListTab(notesToShow: NoteState.completed),
             ],
           ),
           appBar: AppBar(

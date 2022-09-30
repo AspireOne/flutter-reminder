@@ -1,16 +1,19 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_reminder/overlays/time_picker_overlay.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
-import 'overlay_base.dart';
 import 'garbage_overlay.dart';
 
-class RecordingOverlay extends OverlayBase {
+class RecordingOverlay extends StatefulWidget {
   final String recordingId;
+  final Function(DateTime, String)? onSuccessfullyFinished;
 
-  const RecordingOverlay({Key? key, required this.recordingId, super.onSuccessfullyFinished, super.onStartedPickingTime, /*super.onDismissed*/}) : super(key: key);
+  const RecordingOverlay({Key? key, required this.recordingId, this.onSuccessfullyFinished}) : super(key: key);
 
   @override
   State<RecordingOverlay> createState() => _RecordingOverlayState();
@@ -18,35 +21,30 @@ class RecordingOverlay extends OverlayBase {
 
 class _RecordingOverlayState extends State<RecordingOverlay> {
   final Record recorder = Record();
-  final Duration maxRecordingDuration = const Duration(seconds: 10);
-  Duration recordingElapsed = Duration.zero;
-  bool recording = true;
+  final Duration maxDuration = const Duration(seconds: 10);
+  bool hasFinishedRecording = false;
+  Duration elapsed = Duration.zero;
+  String path = "";
 
   @override
   void initState() {
     super.initState();
-    recorder.start(
-      path: "recording_${widget.recordingId}.m4a",
-    );
-
-    Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() => recordingElapsed += const Duration(seconds: 1));
-      if (recordingElapsed >= maxRecordingDuration) {
-        timer.cancel();
-        stopRecording();
-      }
+    getApplicationDocumentsDirectory().then((value) {
+      path = "${value.path}/recordings/${widget.recordingId}.mp3";
+      startRecording();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return GarbageOverlay(
-        body: recording ? getRecordingWidget(maxRecordingDuration, recordingElapsed) : getTimePickerWidget()
+        body: hasFinishedRecording
+            ? TimePickerOverlay(onPicked: (time) {
+                widget.onSuccessfullyFinished!(time, path);
+                Navigator.pop(context);
+            })
+            : getRecordingWidget(maxDuration, elapsed)
     );
-  }
-
-  Widget getTimePickerWidget() {
-    return Container();
   }
 
   Widget getRecordingWidget(Duration duration, Duration elapsed) {
@@ -65,6 +63,9 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
           children: [
             const _RecordingOverlayMicIcon(),
             Text("${elapsed.inSeconds}/${duration.inSeconds}s", style: const TextStyle(color: Colors.white)),
+            const SizedBox(
+              height: 20,
+            ),
             const Text("Listening...", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))
           ],
         ),
@@ -72,11 +73,32 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
     );
   }
 
+  void startRecording() async {
+    if (await recorder.isRecording()) return;
+
+    recorder.start(path: path);
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (elapsed >= maxDuration || hasFinishedRecording || !mounted) {
+        timer.cancel();
+        stopRecording();
+        return;
+      }
+      setState(() => elapsed += const Duration(seconds: 1));
+    });
+  }
+
+  @override
+  void dispose() {
+    stopRecording();
+    super.dispose();
+  }
+
   void stopRecording() async {
     if (!await recorder.isRecording()) return;
+
     recorder.stop();
     recorder.dispose();
-    setState(() => recording = false);
+    setState(() => hasFinishedRecording = true);
   }
 }
 

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'garbage_overlay.dart';
 
 class TimePickerOverlay extends StatefulWidget {
-  const TimePickerOverlay({Key? key}) : super(key: key);
+  final Function(DateTime time) onPicked;
+  const TimePickerOverlay({Key? key, required this.onPicked}) : super(key: key);
 
   @override
   State<TimePickerOverlay> createState() => _TimePickerOverlayState();
@@ -17,35 +18,92 @@ class _TimePickerOverlayState extends State<TimePickerOverlay> {
             color: Colors.transparent,
             child: Column(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    InkWell(
-                      onTap: () {}, // Handle your callback
-                      child: Ink(color: Colors.transparent),
-                    ),
-                    InkWell(
-                      onTap: () {}, // Handle your callback
-                      child: Ink(color: Colors.transparent),
-                    ),
-                    InkWell(
-                      onTap: () {}, // Handle your callback
+                Expanded(
+                  child: Row(
+                    //crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      timeButton(timeToAdd: const Duration(minutes: 5)),
+                      timeButton(timeToAdd: const Duration(minutes: 10)),
+                      timeButton(timeToAdd: const Duration(minutes: 15)),
+                    ],
+                  )
+                ),
+                Expanded(
+                    child: Row(
+                      //crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        timeButton(timeToAdd: const Duration(minutes: 20)),
+                        timeButton(timeToAdd: const Duration(minutes: 30)),
+                        timeButton(timeToAdd: const Duration(minutes: 45)),
+                      ],
                     )
-                  ],
-                )
+                ),                Expanded(
+                    child: Row(
+                      //crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        timeButton(timeToAdd: const Duration(minutes: 60)),
+                        timeButton(timeToAdd: const Duration(minutes: 120)),
+                        timeButton(),
+                      ],
+                    )
+                ),
               ],
             )
         )
     );
   }
-}
 
-class TimeButton extends StatelessWidget {
-  const TimeButton({Key? key}) : super(key: key);
+  Widget timeButton({Duration? timeToAdd}) {
+    return Expanded(
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(
+              Radius.circular(12.0),
+            ),
+          ),
+          height: double.infinity,
+          margin: const EdgeInsets.all(8),
+          child: TextButton(
+            onPressed: () async {
+              if (timeToAdd != null) {
+                widget.onPicked(DateTime.now().add(timeToAdd));
+                return;
+              }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container();
+              var datetime = await pickTimeThroughTimePicker();
+              if (datetime == null) return;
+              widget.onPicked(datetime);
+            },
+            child: Text(timeToAdd != null ? "Za ${timeToAdd.inMinutes} minut" : "Vlastní"),
+          ),
+        )
+    );
+  }
+
+  Future<DateTime?> pickTimeThroughTimePicker() async {
+    final TimeOfDay? timeOfDay = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (timeOfDay == null) return null;
+    DateTime datetime = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+        timeOfDay.hour,
+        timeOfDay.minute
+    );
+
+    if (isTimeOfDayInPast(timeOfDay)) datetime.add(const Duration(days: 1));
+    return datetime;
+  }
+
+  // Check if passed timeOfDay is in the past.
+  bool isTimeOfDayInPast(TimeOfDay timeOfDay) {
+    final now = DateTime.now();
+    final dt = DateTime(now.year, now.month, now.day, timeOfDay.hour, timeOfDay.minute);
+    return dt.isBefore(now);
   }
 }
-

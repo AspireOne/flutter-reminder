@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reminder/widgets/voice_note_content.dart';
 import 'package:intl/intl.dart';
@@ -10,11 +11,10 @@ enum UnitType { minutes, hours }
 class Note extends StatefulWidget {
   final String? recordingPath;
   final String? textContent;
-  final Function? onDue;
-
-  final DateTime creationTime;
-  final DateTime dueTime;
   final String? id;
+  final Function? onDue;
+  final DateTime creationTime;
+  DateTime dueTime;
 
   Note({super.key, required this.dueTime, required this.id, this.textContent, this.recordingPath, this.onDue}) : creationTime = DateTime.now() {
     if(textContent == null && recordingPath == null)
@@ -28,45 +28,38 @@ class Note extends StatefulWidget {
 }
 
 class _NoteState extends State<Note> {
-  DateTime? dueTime;
-  bool isDone = false;
+  //DateTime? dueTime;
 
   @override
   void initState() {
     super.initState();
-    dueTime = widget.dueTime;
+    //dueTime = widget.dueTime;
 
     // If the note is due, then we don't need to update it.
-    if (DateTime.now().isAfter(dueTime!)) {
-      isDone = true;
-      return;
-    }
+    print("IS DUE " + isDue().toString());
+    print(widget.dueTime.toString());
+    print(DateTime.now().toString());
+    print(widget.dueTime.isBefore(DateTime.now()));
+    if (!isDue()) setStateUpdateTimer();
+  }
 
-    // Update the note every minute.
+  // Update the note every minute.
+  void setStateUpdateTimer() {
     Timer.periodic(const Duration(minutes: 1), (Timer t) {
-      if (isDone) {
+      if (mounted) setState(() => {});
+      // If the note is due, remaining time is not shown, so theres nothing to update.
+      if (isDue()) {
         t.cancel();
         return;
       }
-      setState(() => {});
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    isDone = true;
-  }
+  bool isDue() => DateTime.now().isAfter(widget.dueTime);
 
   @override
   Widget build(BuildContext context) {
-    if (DateTime.now().isAfter(dueTime!)) isDone = true;
-    if (isDone) {
-      dueTime = DateTime.now();
-      widget.onDue?.call();
-    }
-
-    final dueTimeInWords = getDueTimeInWords(dueTime!);
+    final dueTimeInWords = getRemainingTimeInWords(widget.dueTime);
     final creationTimeFormatted = "zádáno: ${DateFormat("d.M. H:mm").format(widget.creationTime)}";
 
     return Padding(
@@ -90,7 +83,7 @@ class _NoteState extends State<Note> {
                 BottomPanel(
                     dueTimeInWords,
                     // If the note is already due, then the button should be disabled.
-                    onMarkDonePressed: isDone ? null : () => setState(() => isDone = true)
+                    onMarkDonePressed: isDue() ? null : () => setState(() => widget.dueTime = DateTime.now())
                 )
               ],
             ),
@@ -111,7 +104,7 @@ class _NoteState extends State<Note> {
     );
   }
 
-  String getDueTimeInWords(DateTime dueTime) {
+  String getRemainingTimeInWords(DateTime dueTime) {
     final now = DateTime.now();
 
     if (now.isAfter(dueTime) || now.isAtSameMomentAs(dueTime)) {
@@ -125,7 +118,7 @@ class _NoteState extends State<Note> {
 
   String getDiffInWords(Duration difference) {
     final hours = difference.inHours;
-    final minutes = hours > 0 ? difference.inMinutes % 60 : difference.inMinutes;
+    final minutes = hours > 0 ? difference.inMinutes % 60 : difference.inMinutes + 1;
 
     final String minutesFormatted = minutes == 0 ? "" : "$minutes ${getUnitFormatted(minutes, UnitType.minutes)}";
     String hoursFormatted = hours == 0 ? "" : "$hours ${getUnitFormatted(hours, UnitType.hours)}";
@@ -171,12 +164,15 @@ class BottomPanel extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
-        Text(
-          dueText,
-          style: const TextStyle(
-              color: Colors.grey
+        Flexible(
+          child: Text(
+            dueText,
+            overflow: TextOverflow.visible,
+            style: const TextStyle(
+                color: Colors.grey
+            ),
+            textAlign: TextAlign.left,
           ),
-          textAlign: TextAlign.left,
         ),
         TextButton(
           onPressed: onMarkDonePressed,

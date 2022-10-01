@@ -31,7 +31,7 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
     super.initState();
     getApplicationDocumentsDirectory().then((value) {
       path = "${value.path}/recordings/${widget.recordingId}.mp3";
-      startRecording();
+      startRecording(path);
     });
   }
 
@@ -73,7 +73,13 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
     );
   }
 
-  void startRecording() async {
+  @override
+  void dispose() {
+    stopRecording();
+    super.dispose();
+  }
+
+  void startRecording(String path) async {
     if (await recorder.isRecording()) return;
 
     recorder.start(path: path);
@@ -85,12 +91,6 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
       }
       setState(() => elapsed += const Duration(seconds: 1));
     });
-  }
-
-  @override
-  void dispose() {
-    stopRecording();
-    super.dispose();
   }
 
   void stopRecording() async {

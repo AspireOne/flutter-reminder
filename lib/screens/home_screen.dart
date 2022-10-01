@@ -13,8 +13,8 @@ class HomeScreen extends StatelessWidget {
         child: Scaffold(
           body: const TabBarView(
             children: [
-              NoteListTab(notesToShow: NoteState.oncoming),
-              NoteListTab(notesToShow: NoteState.completed),
+              NoteListTab(notesToShow: NoteState.oncoming, showButtons: true,),
+              NoteListTab(notesToShow: NoteState.completed, showButtons: false),
             ],
           ),
           appBar: AppBar(

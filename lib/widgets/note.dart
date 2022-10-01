@@ -33,13 +33,6 @@ class _NoteState extends State<Note> {
   @override
   void initState() {
     super.initState();
-    //dueTime = widget.dueTime;
-
-    // If the note is due, then we don't need to update it.
-    print("IS DUE " + isDue().toString());
-    print(widget.dueTime.toString());
-    print(DateTime.now().toString());
-    print(widget.dueTime.isBefore(DateTime.now()));
     if (!isDue()) setStateUpdateTimer();
   }
 

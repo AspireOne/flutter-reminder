@@ -12,8 +12,9 @@ enum NoteType { voiceNote, textNote }
 
 class NoteListTab extends StatefulWidget {
   final NoteState notesToShow;
+  final bool showButtons;
 
-  const NoteListTab({Key? key, required this.notesToShow}) : super(key: key);
+  const NoteListTab({Key? key, required this.notesToShow, required this.showButtons}) : super(key: key);
 
   @override
   State<NoteListTab> createState() => _NoteListTabState();
@@ -46,7 +47,7 @@ class _NoteListTabState extends State<NoteListTab> /*with AutomaticKeepAliveClie
     }).toList();
 
     return Scaffold(
-      floatingActionButton: _AddNoteButtons(
+      floatingActionButton: !widget.showButtons ? null : _AddNoteButtons(
         textButton: _AddNoteButton(
           type: NoteType.textNote,
           onPress: () {

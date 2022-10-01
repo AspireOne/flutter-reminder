@@ -96,14 +96,7 @@ class _TimePickerOverlayState extends State<TimePickerOverlay> {
         timeOfDay.minute
     );
 
-    if (isTimeOfDayInPast(timeOfDay)) datetime.add(const Duration(days: 1));
+    if (datetime.isBefore(DateTime.now())) datetime = datetime.add(const Duration(days: 1));
     return datetime;
-  }
-
-  // Check if passed timeOfDay is in the past.
-  bool isTimeOfDayInPast(TimeOfDay timeOfDay) {
-    final now = DateTime.now();
-    final dt = DateTime(now.year, now.month, now.day, timeOfDay.hour, timeOfDay.minute);
-    return dt.isBefore(now);
   }
 }

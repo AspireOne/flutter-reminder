@@ -18,13 +18,12 @@ class _TextOverlayState extends State<TextOverlay> {
   @override
   Widget build(BuildContext context) {
     return GarbageOverlay(
-      body: Dialog(
-        child: textInserted
-            ? TimePickerOverlay(onPicked: (time) {
-              widget.onSuccessfullyFinished!(time, text!);
-              Navigator.pop(context);
-            })
-            : TextField(
+      body: textInserted ?
+      TimePickerOverlay(onPicked: (time) {
+        widget.onSuccessfullyFinished!(time, text!);
+        Navigator.pop(context);
+      }) : Dialog(
+        child: TextField(
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             labelText: 'Note',

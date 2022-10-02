@@ -20,18 +20,30 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
   void initState() {
     super.initState();
 
+    _player.positionStream.listen((position) {
+      if (mounted) setState(() => _position = position);
+    });
+    _player.durationStream.listen((duration) {
+      if (mounted) setState(() => _duration = duration ?? Duration.zero);
+    });
+
     // Because playingStream doesn't send an event when the player is finished.
     _player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) _player.stop();
     });
-    _player.playingStream.listen((playing) => setState(() {
-      _isPlaying = playing;
+    _player.playingStream.listen((playing) {
+      if (!mounted) return;
       // Otherwise the player doesn't seet back to zero automatically on stop.
-      if (!_isPlaying) _player.seek(Duration.zero);
-    }));
-    _player.positionStream.listen((position) => setState(() => _position = position));
-    _player.durationStream.listen((duration) => setState(() => _duration = duration ?? Duration.zero));
-    _player.setUrl("//samplelib.com/lib/preview/mp3/sample-3s.mp3"); // Place the real production code here instead when the time comes.
+      setState(() {if (!(_isPlaying = playing)) _player.seek(Duration.zero);});
+    });
+    _player.setFilePath(widget.audioPath, preload: false);
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _player.dispose();
   }
 
   @override
@@ -43,7 +55,9 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           ElevatedButton(
-            onPressed: () => setState(() => _isPlaying ? _player.stop() : _player.play()),
+            onPressed: () => setState(() {
+              _isPlaying ? _player.stop() : _player.play();
+            }),
             child: Text(buttonText),
           ),
           const SizedBox(width: 10),

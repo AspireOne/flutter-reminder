@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:vibration/vibration.dart';
 
 import '../overlays/recording_overlay.dart';
 import '../overlays/text_overlay.dart';
@@ -9,6 +13,10 @@ import 'note_list.dart';
 
 enum NoteState { oncoming, completed, all }
 enum NoteType { voiceNote, textNote }
+
+
+StreamController _onNotesUpdatedController = StreamController.broadcast();
+Stream get onNotesUpdated => _onNotesUpdatedController.stream;
 
 class NoteListTab extends StatefulWidget {
   final NoteState notesToShow;
@@ -20,20 +28,37 @@ class NoteListTab extends StatefulWidget {
   State<NoteListTab> createState() => _NoteListTabState();
 }
 
-class _NoteListTabState extends State<NoteListTab> /*with AutomaticKeepAliveClientMixin<NoteListTab>*/ {
+class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClientMixin<NoteListTab> {
   static final List<Note> _notes = <Note>[];
   static bool _notesInitialized = false;
   double _voiceButtonOpacity = 1;
   double _textButtonOpacity = 1;
 
   _NoteListTabState() {
-    // TODO: Initialize notes from storage.
-    if (!_notesInitialized) _notesInitialized = true;
+    if (_notesInitialized) return;
+    _notesInitialized = true;
+
+    SharedPreferences.getInstance().then((data) {
+      data.getKeys().forEach((key) {
+        if (key.startsWith(Note.keyPrefix)) {
+          Note.fromSharedPrefs(key).then((note) => _notes.add(note));
+        }
+      });
+      setState(() {});
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    onNotesUpdated.listen((e) {
+      setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    //super.build(context);
+    super.build(context);
 
     final notesToShow = _notes.where((note) {
       switch (widget.notesToShow) {
@@ -45,6 +70,12 @@ class _NoteListTabState extends State<NoteListTab> /*with AutomaticKeepAliveClie
           return true;
       }
     }).toList();
+
+    if (widget.notesToShow == NoteState.completed) {
+      notesToShow.sort((a, b) => b.dueTime.compareTo(a.dueTime));
+    } else {
+      notesToShow.sort((a, b) => b.creationTime.compareTo(a.creationTime));
+    }
 
     return Scaffold(
       floatingActionButton: !widget.showButtons ? null : _AddNoteButtons(
@@ -92,14 +123,10 @@ class _NoteListTabState extends State<NoteListTab> /*with AutomaticKeepAliveClie
       dueTime: dueTime,
       recordingPath: audioPath,
       textContent: textContent,
-      onDue: () {
-        // Defer the setState call to a next tick, otherwise an error is thrown.
-        Future.delayed(Duration.zero, () async {
-          setState(() {});
-        });
-      },
+      onDue: () => _onNotesUpdatedController.add(null),
     );
 
+    note.saveToSharedPrefs();
     _notes.add(note);
   }
 
@@ -179,7 +206,10 @@ class _AddNoteButton extends StatelessWidget {
           opacity: opacity,
           duration: const Duration(milliseconds: 300),
           child: FloatingActionButton(
-            onPressed: () => onPress?.call(),
+            onPressed: () {
+              Vibration.vibrate(duration: 50);
+              onPress?.call();
+            },
             heroTag: type.toString(),
             child: Icon(type == NoteType.voiceNote
                 ? Icons.record_voice_over

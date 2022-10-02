@@ -13,47 +13,50 @@ class TimePickerOverlay extends StatefulWidget {
 class _TimePickerOverlayState extends State<TimePickerOverlay> {
   @override
   Widget build(BuildContext context) {
-    return GarbageOverlay(
-        body: Container(
-            color: Colors.transparent,
-            child: Column(
+    return Container(
+        color: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              //crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Row(
-                    //crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      timeButton(timeToAdd: const Duration(minutes: 5)),
-                      timeButton(timeToAdd: const Duration(minutes: 10)),
-                      timeButton(timeToAdd: const Duration(minutes: 15)),
-                    ],
-                  )
-                ),
-                Expanded(
-                    child: Row(
-                      //crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        timeButton(timeToAdd: const Duration(minutes: 20)),
-                        timeButton(timeToAdd: const Duration(minutes: 30)),
-                        timeButton(timeToAdd: const Duration(minutes: 45)),
-                      ],
-                    )
-                ),                Expanded(
-                    child: Row(
-                      //crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        timeButton(timeToAdd: const Duration(minutes: 60)),
-                        timeButton(timeToAdd: const Duration(minutes: 120)),
-                        timeButton(),
-                      ],
-                    )
-                ),
+                TimeButton(timeToAdd: const Duration(minutes: 5), onPicked: widget.onPicked),
+                TimeButton(timeToAdd: const Duration(minutes: 10), onPicked: widget.onPicked),
+                TimeButton(timeToAdd: const Duration(minutes: 15), onPicked: widget.onPicked),
               ],
-            )
+            ),
+            Row(
+              //crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TimeButton(timeToAdd: const Duration(minutes: 20), onPicked: widget.onPicked),
+                TimeButton(timeToAdd: const Duration(minutes: 30), onPicked: widget.onPicked),
+                TimeButton(timeToAdd: const Duration(minutes: 45), onPicked: widget.onPicked),
+              ],
+            ),
+            Row(
+              //crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TimeButton(timeToAdd: const Duration(minutes: 60), onPicked: widget.onPicked),
+                TimeButton(timeToAdd: const Duration(minutes: 120), onPicked: widget.onPicked),
+                TimeButton(onPicked: widget.onPicked),
+              ],
+            ),
+          ],
         )
     );
   }
+}
 
-  Widget timeButton({Duration? timeToAdd}) {
+class TimeButton extends StatelessWidget {
+  final Duration? timeToAdd;
+  final Function(DateTime time) onPicked;
+  
+  const TimeButton({Key? key, this.timeToAdd, required this.onPicked}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
         child: Container(
           decoration: const BoxDecoration(
@@ -62,26 +65,29 @@ class _TimePickerOverlayState extends State<TimePickerOverlay> {
               Radius.circular(12.0),
             ),
           ),
-          height: double.infinity,
+          height: 100,
           margin: const EdgeInsets.all(8),
-          child: TextButton(
-            onPressed: () async {
-              if (timeToAdd != null) {
-                widget.onPicked(DateTime.now().add(timeToAdd));
-                return;
-              }
-
-              var datetime = await pickTimeThroughTimePicker();
-              if (datetime == null) return;
-              widget.onPicked(datetime);
-            },
-            child: Text(timeToAdd != null ? "Za ${timeToAdd.inMinutes} minut" : "Vlastní"),
-          ),
+          child: _getButton(context),
         )
     );
   }
 
-  Future<DateTime?> pickTimeThroughTimePicker() async {
+  TextButton _getButton(BuildContext context) {
+    return TextButton(
+      onPressed: () async {
+        if (timeToAdd != null) {
+          onPicked(DateTime.now().add(timeToAdd!));
+          return;
+        }
+        var datetime = await pickTimeThroughTimePicker(context);
+        if (datetime == null) return;
+        onPicked(datetime);
+      },
+      child: Text(timeToAdd != null ? "Za ${timeToAdd!.inMinutes} minut" : "Vlastní"),
+    );
+  }
+
+  Future<DateTime?> pickTimeThroughTimePicker(BuildContext context) async {
     final TimeOfDay? timeOfDay = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),

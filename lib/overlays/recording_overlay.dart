@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_reminder/overlays/time_picker_overlay.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:path/path.dart' as p;
+import 'package:vibration/vibration.dart';
 
 import 'garbage_overlay.dart';
 
@@ -24,14 +26,13 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
   final Duration maxDuration = const Duration(seconds: 10);
   bool hasFinishedRecording = false;
   Duration elapsed = Duration.zero;
-  String path = "";
+  String? path = null;
 
   @override
   void initState() {
     super.initState();
     getApplicationDocumentsDirectory().then((value) {
-      path = "${value.path}/recordings/${widget.recordingId}.mp3";
-      startRecording(path);
+      startRecording(p.join(value.path, "${widget.recordingId}.m4a"));
     });
   }
 
@@ -40,7 +41,7 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
     return GarbageOverlay(
         body: hasFinishedRecording
             ? TimePickerOverlay(onPicked: (time) {
-                widget.onSuccessfullyFinished!(time, path);
+                widget.onSuccessfullyFinished!(time, path!);
                 Navigator.pop(context);
             })
             : getRecordingWidget(maxDuration, elapsed)
@@ -52,9 +53,7 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
       backgroundColor: Colors.black.withOpacity(0),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _RecordingStopButton(
-        onPress: () {
-          stopRecording();
-        },
+        onPress: () => stopRecording(),
       ),
       body: Center(
         child: Column(
@@ -82,7 +81,7 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
   void startRecording(String path) async {
     if (await recorder.isRecording()) return;
 
-    recorder.start(path: path);
+    recorder.start(path: path, encoder: AudioEncoder.aacLc);
     Timer.periodic(const Duration(seconds: 1), (timer) {
       if (elapsed >= maxDuration || hasFinishedRecording || !mounted) {
         timer.cancel();
@@ -96,9 +95,9 @@ class _RecordingOverlayState extends State<RecordingOverlay> {
   void stopRecording() async {
     if (!await recorder.isRecording()) return;
 
-    recorder.stop();
+    path = await recorder.stop();
     recorder.dispose();
-    setState(() => hasFinishedRecording = true);
+    if (mounted) setState(() => hasFinishedRecording = true);
   }
 }
 
@@ -150,7 +149,10 @@ class _RecordingStopButtonState extends State<_RecordingStopButton> {
         child: FloatingActionButton(
           //splashColor: Colors.red,
           backgroundColor: Colors.red,
-          onPressed: () => widget.onPress?.call(),
+          onPressed: () {
+            Vibration.vibrate(duration: 50);
+            widget.onPress?.call();
+          },
           child: const Icon(Icons.stop),
         )
     );

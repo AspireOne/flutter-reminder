@@ -1,26 +1,75 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reminder/widgets/voice_note_content.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 enum UnitType { minutes, hours }
 
 class Note extends StatefulWidget {
+  static const String keyPrefix = "_note";
   final String? recordingPath;
   final String? textContent;
-  final String? id;
+  final String id;
   final Function? onDue;
-  final DateTime creationTime;
+  late final DateTime creationTime;
   DateTime dueTime;
 
-  Note({super.key, required this.dueTime, required this.id, this.textContent, this.recordingPath, this.onDue}) : creationTime = DateTime.now() {
+  Note({super.key, required this.dueTime, required this.id, this.textContent, this.recordingPath, this.onDue, DateTime? creationTime}) {
     if(textContent == null && recordingPath == null)
       throw ArgumentError("One of the parameters must be provided.");
     if (textContent != null && recordingPath != null)
       throw ArgumentError("Only one of the parameters must be provided.");
+
+    this.creationTime = creationTime ?? DateTime.now();
+  }
+
+  // Retrieve a note from shared preferences using its id.
+  static Future<Note> fromSharedPrefs(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final noteJson = prefs.getString(key);
+    if (noteJson == null) throw ArgumentError("No note with id $key found in shared preferences.");
+    return Note._fromJson(noteJson);
+  }
+
+  // Save this object to shared preferences in a json format.
+  Future<void> saveToSharedPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString("$keyPrefix$id", _toJson());
+  }
+
+  // If this object is in shared prefs, update it.
+  Future<void> updateInSharedPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey("$keyPrefix$id")) saveToSharedPrefs();
+  }
+
+  // Create a note from a json string.
+  factory Note._fromJson(String jsonStr) {
+    final Map<String, dynamic> json = jsonDecode(jsonStr);
+
+    return Note(
+      id: json['id'],
+      dueTime: DateTime.parse(json['dueTime']),
+      creationTime: DateTime.parse(json['creationTime']),
+      recordingPath: json['recordingPath'],
+      textContent: json['textContent'],
+    );
+  }
+
+  // Serialize this object into a JSON and return a String.
+  String _toJson() {
+    return jsonEncode({
+      "id": id,
+      "dueTime": dueTime.toIso8601String(),
+      "creationTime": creationTime!.toIso8601String(),
+      "textContent": textContent,
+      "recordingPath": recordingPath,
+    });
   }
 
   @override
@@ -53,10 +102,10 @@ class _NoteState extends State<Note> {
   @override
   Widget build(BuildContext context) {
     final dueTimeInWords = getRemainingTimeInWords(widget.dueTime);
-    final creationTimeFormatted = "zádáno: ${DateFormat("d.M. H:mm").format(widget.creationTime)}";
+    final creationTimeFormatted = "zádáno: ${DateFormat("d.M. H:mm").format(widget.creationTime!)}";
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0.0),
+      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 1.0),
       child: Container(
         decoration: getCardDecoration(),
         child: Card(
@@ -66,7 +115,7 @@ class _NoteState extends State<Note> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                CreationTimeText(creationTimeFormatted),
+                DueTimeText(dueTimeInWords),
                 const SizedBox(height: 10),
                 widget.recordingPath != null ? VoiceNoteContent(audioPath: widget.recordingPath!) : Text(
                   widget.textContent.toString(),
@@ -74,9 +123,13 @@ class _NoteState extends State<Note> {
                 ),
                 const SizedBox(height: 10),
                 BottomPanel(
-                    dueTimeInWords,
+                    creationTimeFormatted,
                     // If the note is already due, then the button should be disabled.
-                    onMarkDonePressed: isDue() ? null : () => setState(() => widget.dueTime = DateTime.now())
+                    onMarkDonePressed: isDue() ? null : () {
+                      setState(() => widget.dueTime = DateTime.now());
+                      widget.onDue?.call();
+                      widget.updateInSharedPrefs();
+                    }
                 )
               ],
             ),
@@ -147,26 +200,36 @@ class CreationTimeText extends StatelessWidget {
   }
 }
 
+class DueTimeText extends StatelessWidget {
+  final String dueTimeText;
+  const DueTimeText(this.dueTimeText, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: Text(
+        dueTimeText,
+        overflow: TextOverflow.fade,
+        style: const TextStyle(
+            color: Colors.grey
+        ),
+        textAlign: TextAlign.left,
+      ),
+    );
+  }
+}
+
 class BottomPanel extends StatelessWidget {
-  final String dueText;
+  final String creationTimeText;
   final VoidCallback? onMarkDonePressed;
-  const BottomPanel(this.dueText, {Key? key, this.onMarkDonePressed}) : super(key: key);
+  const BottomPanel(this.creationTimeText, {Key? key, this.onMarkDonePressed}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
-        Flexible(
-          child: Text(
-            dueText,
-            overflow: TextOverflow.visible,
-            style: const TextStyle(
-                color: Colors.grey
-            ),
-            textAlign: TextAlign.left,
-          ),
-        ),
+        CreationTimeText(creationTimeText),
         TextButton(
           onPressed: onMarkDonePressed,
           child: const Text('OZNAČIT ZA DOKONČENÉ'),

@@ -17,10 +17,10 @@ class _GarbageOverlayState extends State<GarbageOverlay> {
   @override
   void initState() {
     super.initState();
+    // So that the overlay fades in.
     Future.delayed(Duration.zero, () => setState(() => opacity = 1));
   }
 
-  // TODO: Add universal cancel button.
   @override
   Widget build(BuildContext context) {
     return GestureDetector(

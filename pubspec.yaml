@@ -44,6 +44,9 @@ dependencies:
   just_audio_windows: ^0.1.0
   marquee: ^2.2.3
   auto_size_text: ^3.0.0
+  path: ^1.8.2
+  vibration: ^1.7.6
+  flutter_local_notifications: ^11.0.1
 
 dev_dependencies:
   flutter_test:

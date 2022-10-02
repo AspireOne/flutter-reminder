@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_reminder/alarms.dart';
+import 'package:flutter_reminder/notifications.dart';
 import 'package:flutter_reminder/widgets/voice_note_content.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,28 +14,40 @@ enum UnitType { minutes, hours }
 
 class Note extends StatefulWidget {
   static const String keyPrefix = "_note";
+  late final DateTime creationTime;
+  late final int numericId;
   final String? recordingPath;
   final String? textContent;
-  final String id;
   final Function? onDue;
-  late final DateTime creationTime;
   DateTime dueTime;
+  final String id;
 
-  Note({super.key, required this.dueTime, required this.id, this.textContent, this.recordingPath, this.onDue, DateTime? creationTime}) {
+  Note({super.key, required this.dueTime, required this.id, int? notificationsId, this.textContent, this.recordingPath, this.onDue, DateTime? creationTime}) {
     if(textContent == null && recordingPath == null)
       throw ArgumentError("One of the parameters must be provided.");
     if (textContent != null && recordingPath != null)
       throw ArgumentError("Only one of the parameters must be provided.");
 
     this.creationTime = creationTime ?? DateTime.now();
+    this.numericId = notificationsId ?? _generateNumericId();
+  }
+
+  static int _generateNumericId() {
+    final random = Random();
+    String num = (random.nextInt(9) + 1).toString();
+
+    for (int i = 0; i < 4; i++) {
+      num += random.nextInt(10).toString();
+    }
+    return int.parse(num);
   }
 
   // Retrieve a note from shared preferences using its id.
-  static Future<Note> fromSharedPrefs(String key) async {
+  static Future<Note?> fromSharedPrefs(String key) async {
     final prefs = await SharedPreferences.getInstance();
     final noteJson = prefs.getString(key);
     if (noteJson == null) throw ArgumentError("No note with id $key found in shared preferences.");
-    return Note._fromJson(noteJson);
+    return _fromJson(noteJson);
   }
 
   // Save this object to shared preferences in a json format.
@@ -49,16 +63,40 @@ class Note extends StatefulWidget {
   }
 
   // Create a note from a json string.
-  factory Note._fromJson(String jsonStr) {
+  static Note? _fromJson(String jsonStr) {
     final Map<String, dynamic> json = jsonDecode(jsonStr);
 
-    return Note(
-      id: json['id'],
-      dueTime: DateTime.parse(json['dueTime']),
-      creationTime: DateTime.parse(json['creationTime']),
-      recordingPath: json['recordingPath'],
-      textContent: json['textContent'],
-    );
+    try {
+      return Note(
+        id: json['id'],
+        dueTime: DateTime.parse(json['dueTime']),
+        creationTime: DateTime.parse(json['creationTime']),
+        recordingPath: json['recordingPath'],
+        textContent: json['textContent'],
+        notificationsId: json['notificationsId'],
+      );
+    } catch (e) {
+      debugPrint("Error while parsing json note: $e");
+    }
+    return null;
+  }
+
+  void schedulePreRemindNotification(int minutesBefore) {
+    if (DateTime.now().isAfter(dueTime)) return;
+    final remainingMinutes = dueTime.add(const Duration(seconds: 2)).difference(DateTime.now()).inMinutes;
+
+    final title = "${recordingPath != null ? "Hlasová p" : "P"}řipomínka proběhne za $remainingMinutes minut.";
+    final body = textContent ?? "Kliknutím na tuto notifikaci se dostanete k připomínce.";
+    DateTime scheduledTime = dueTime.subtract(Duration(minutes: minutesBefore));
+    if (scheduledTime.difference(DateTime.now()).inMinutes.abs() <= minutesBefore) {
+      scheduledTime = DateTime.now().add(const Duration(seconds: 1));
+    }
+
+    Notifications.scheduleNotification(title, body, numericId, scheduledTime);
+  }
+
+  void cancelScheduledNotifications() {
+    Notifications.cancelNotification(numericId);
   }
 
   // Serialize this object into a JSON and return a String.

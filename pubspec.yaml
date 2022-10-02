@@ -42,11 +42,11 @@ dependencies:
   record: ^4.4.0
   path_provider: ^2.0.11
   just_audio_windows: ^0.1.0
-  marquee: ^2.2.3
-  auto_size_text: ^3.0.0
   path: ^1.8.2
   vibration: ^1.7.6
   flutter_local_notifications: ^11.0.1
+  flutter_native_timezone: ^2.0.0
+  android_alarm_manager_plus: ^2.0.7+1
 
 dev_dependencies:
   flutter_test:

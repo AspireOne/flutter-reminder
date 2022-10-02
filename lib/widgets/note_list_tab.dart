@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_reminder/alarms.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:vibration/vibration.dart';
 
+import '../notifications.dart';
 import '../overlays/recording_overlay.dart';
 import '../overlays/text_overlay.dart';
 import 'note.dart';
@@ -41,7 +43,9 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
     SharedPreferences.getInstance().then((data) {
       data.getKeys().forEach((key) {
         if (key.startsWith(Note.keyPrefix)) {
-          Note.fromSharedPrefs(key).then((note) => _notes.add(note));
+          Note.fromSharedPrefs(key).then((note) {
+            if (note != null) _notes.add(note);
+          });
         }
       });
       setState(() {});
@@ -51,7 +55,10 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
   @override
   void initState() {
     super.initState();
-    onNotesUpdated.listen((e) {
+    onNotesUpdated.listen((noteId) {
+      final Note note = _notes.firstWhere((note) => note.id == noteId);
+      note.cancelScheduledNotifications();
+      Alarm.cancel(note.numericId);
       setState(() {});
     });
   }
@@ -60,7 +67,7 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
   Widget build(BuildContext context) {
     super.build(context);
 
-    final notesToShow = _notes.where((note) {
+    var notesToShow = _notes.where((note) {
       switch (widget.notesToShow) {
         case NoteState.oncoming:
           return note.dueTime.isAfter(DateTime.now());
@@ -73,6 +80,7 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
 
     if (widget.notesToShow == NoteState.completed) {
       notesToShow.sort((a, b) => b.dueTime.compareTo(a.dueTime));
+      notesToShow = notesToShow.take(10).toList();
     } else {
       notesToShow.sort((a, b) => b.creationTime.compareTo(a.creationTime));
     }
@@ -123,11 +131,17 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
       dueTime: dueTime,
       recordingPath: audioPath,
       textContent: textContent,
-      onDue: () => _onNotesUpdatedController.add(null),
+      onDue: () => _onNotesUpdatedController.add(id),
     );
 
     note.saveToSharedPrefs();
+    note.schedulePreRemindNotification(5);
+    Alarm.setOneShot(dueTime, alarmCallback, note.numericId);
     _notes.add(note);
+  }
+
+  static void alarmCallback() {
+
   }
 
   Widget _getRecordingOverlay() {

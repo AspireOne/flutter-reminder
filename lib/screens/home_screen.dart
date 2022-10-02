@@ -4,7 +4,8 @@ import '../overlays/time_picker_overlay.dart';
 import '../widgets/note_list_tab.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final String? payload;
+  const HomeScreen({Key? key, this.payload}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

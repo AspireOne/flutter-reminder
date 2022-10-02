@@ -1,22 +1,20 @@
 // Copyright 2018 The Flutter team. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
-import 'dart:async';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_reminder/notifications.dart';
 import 'package:flutter_reminder/screens/home_screen.dart';
-import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  var launchDetails = Notifications.initialize();
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? payload;
+  const MyApp({super.key, this.payload});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +31,7 @@ class MyApp extends StatelessWidget {
               )
             ],
           ),
-          body: const HomeScreen(),
+          body: HomeScreen(payload: payload),
         )
     );
   }

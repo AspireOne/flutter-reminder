@@ -36,7 +36,7 @@ class VoiceNoteContentState extends State<VoiceNoteContent> {
       // Otherwise the player doesn't seet back to zero automatically on stop.
       setState(() {if (!(_isPlaying = playing)) _player.seek(Duration.zero);});
     });
-    _player.setFilePath(widget.audioPath, preload: false);
+    _player.setFilePath(widget.audioPath, preload: true);
   }
 
   @override

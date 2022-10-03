@@ -86,7 +86,7 @@ class Note extends StatefulWidget {
     if (DateTime.now().isAfter(dueTime)) return;
 
     DateTime scheduledTime = dueTime.subtract(Duration(minutes: minutesBefore));
-    if (scheduledTime.difference(DateTime.now()).inMinutes.abs() <= minutesBefore) {
+    if (scheduledTime.difference(DateTime.now()).inMinutes <= minutesBefore) {
       scheduledTime = DateTime.now().add(const Duration(seconds: 2));
       minutesBefore = dueTime.difference(DateTime.now()).inMinutesRoundedUp();
     }

@@ -25,21 +25,22 @@ class _GarbageOverlayState extends State<GarbageOverlay> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        widget.onDismissed?.call();
+        setState(() => opacity = 0);
         Navigator.pop(context);
+        widget.onDismissed?.call();
       },
-      child: Container(
-          padding: const EdgeInsets.all(32),
-          height: double.infinity,
-          color: const Color.fromRGBO(0, 0, 0, 0.7),
-          width: double.infinity,
-          child: AnimatedOpacity(
-              opacity: opacity,
-              curve: Curves.easeOut,
-              duration: const Duration(milliseconds: 300),
+      child: AnimatedOpacity(
+          opacity: opacity,
+          curve: Curves.easeOut,
+          duration: const Duration(milliseconds: 300),
+          child: Container(
+              padding: const EdgeInsets.all(32),
+              height: double.infinity,
+              color: const Color.fromRGBO(0, 0, 0, 0.7),
+              width: double.infinity,
               child: widget.body
-          )
-      ),
+          ),
+      )
     );
   }
 }

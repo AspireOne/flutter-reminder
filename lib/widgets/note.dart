@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_reminder/alarms.dart';
+import 'package:flutter_reminder/extensions.dart';
 import 'package:flutter_reminder/notifications.dart';
 import 'package:flutter_reminder/widgets/voice_note_content.dart';
 import 'package:intl/intl.dart';
@@ -83,14 +84,15 @@ class Note extends StatefulWidget {
 
   void schedulePreRemindNotification(int minutesBefore) {
     if (DateTime.now().isAfter(dueTime)) return;
-    final remainingMinutes = dueTime.add(const Duration(seconds: 2)).difference(DateTime.now()).inMinutes;
 
-    final title = "${recordingPath != null ? "Hlasová p" : "P"}řipomínka proběhne za $remainingMinutes minut.";
-    final body = textContent ?? "Kliknutím na tuto notifikaci se dostanete k připomínce.";
     DateTime scheduledTime = dueTime.subtract(Duration(minutes: minutesBefore));
     if (scheduledTime.difference(DateTime.now()).inMinutes.abs() <= minutesBefore) {
-      scheduledTime = DateTime.now().add(const Duration(seconds: 1));
+      scheduledTime = DateTime.now().add(const Duration(seconds: 2));
+      minutesBefore = dueTime.difference(DateTime.now()).inMinutesRoundedUp();
     }
+
+    final title = "${recordingPath != null ? "Hlasová p" : "P"}řipomínka proběhne za $minutesBefore minut.";
+    final body = textContent ?? "Kliknutím na tuto notifikaci se dostanete k připomínce.";
 
     Notifications.scheduleNotification(title, body, numericId, scheduledTime);
   }
@@ -120,11 +122,16 @@ class _NoteState extends State<Note> {
   @override
   void initState() {
     super.initState();
-    if (!isDue()) setStateUpdateTimer();
+    if (isDue()) return;
+
+    runStateUpdateTimer();
+
+    int delay = (widget.dueTime.difference(DateTime.now()).inSeconds % 60) + 1;
+    Future.delayed(Duration(seconds: delay), () => runStateUpdateTimer());
   }
 
   // Update the note every minute.
-  void setStateUpdateTimer() {
+  void runStateUpdateTimer() {
     Timer.periodic(const Duration(minutes: 1), (Timer t) {
       if (mounted) setState(() => {});
       // If the note is due, remaining time is not shown, so theres nothing to update.
@@ -202,7 +209,7 @@ class _NoteState extends State<Note> {
 
   String getDiffInWords(Duration difference) {
     final hours = difference.inHours;
-    final minutes = hours > 0 ? difference.inMinutes % 60 : difference.inMinutes + 1;
+    final minutes = hours > 0 ? difference.inMinutes % 60 : difference.inMinutesRoundedUp();
 
     final String minutesFormatted = minutes == 0 ? "" : "$minutes ${getUnitFormatted(minutes, UnitType.minutes)}";
     String hoursFormatted = hours == 0 ? "" : "$hours ${getUnitFormatted(hours, UnitType.hours)}";

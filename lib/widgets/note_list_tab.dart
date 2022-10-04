@@ -79,7 +79,8 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
     }).toList();
 
     if (widget.notesToShow == NoteState.completed) {
-      notesToShow.sort((a, b) => b.dueTime.compareTo(a.dueTime));
+      notesToShow.sort((a, b) => b.creationTime.compareTo(a.creationTime));
+      //notesToShow.sort((a, b) => b.dueTime.compareTo(a.dueTime));
       notesToShow = notesToShow.take(10).toList();
     } else {
       notesToShow.sort((a, b) => b.creationTime.compareTo(a.creationTime));

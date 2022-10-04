@@ -21,18 +21,31 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'ADHD Reminder',
         home: Scaffold(
-          appBar: AppBar(
-            title: const Text("ADHD Reminder"),
-            actions: [
-              IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => {}, // TODO: Open settings screen.
-                  tooltip: "Menu"
-              )
-            ],
-          ),
+          appBar: HomeScreenAppBar(),
           body: HomeScreen(payload: payload),
         )
     );
   }
+}
+
+class HomeScreenAppBar extends StatelessWidget with PreferredSizeWidget {
+  const HomeScreenAppBar({Key? key}) : super(key: key);
+
+  @override
+  AppBar build(BuildContext context) {
+    return AppBar(
+      shadowColor: Colors.transparent,
+      title: const Text("ADHD Reminder"),
+      actions: [
+        IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => {}, // TODO: Open settings screen.
+            tooltip: "Menu"
+        )
+      ],
+    );
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
 }

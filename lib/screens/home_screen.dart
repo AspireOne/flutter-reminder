@@ -14,11 +14,12 @@ class HomeScreen extends StatelessWidget {
         child: Scaffold(
           body: const TabBarView(
             children: [
-              NoteListTab(notesToShow: NoteState.oncoming, showButtons: true,),
+              NoteListTab(notesToShow: NoteState.oncoming, showButtons: true),
               NoteListTab(notesToShow: NoteState.completed, showButtons: false),
             ],
           ),
           appBar: AppBar(
+            toolbarHeight: 1,
             bottom: const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.record_voice_over)),

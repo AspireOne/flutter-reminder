@@ -82,7 +82,16 @@ class Note extends StatefulWidget {
     return null;
   }
 
-  void schedulePreRemindNotification(int minutesBefore) {
+  void scheduleNotifications(int minutesBefore) {
+    _schedulePreRemindNotification(minutesBefore);
+    _scheduleRemindNotification();
+  }
+
+  void cancelNotifications() {
+    Notifications.cancelNotification(numericId);
+  }
+
+  void _schedulePreRemindNotification(int minutesBefore) {
     if (DateTime.now().isAfter(dueTime)) return;
 
     DateTime scheduledTime = dueTime.subtract(Duration(minutes: minutesBefore));
@@ -93,13 +102,18 @@ class Note extends StatefulWidget {
 
     final title = "${recordingPath != null ? "Voice n" : "N"}ote will take place in $minutesBefore minutes." ??
         "${recordingPath != null ? "Hlasová p" : "P"}řipomínka proběhne za $minutesBefore minut.";
-    final body = textContent ?? "Click on this notification to open the note." ?? "Kliknutím na tuto notifikaci se dostanete k připomínce.";
+    final body = textContent ?? "Click on this notification to open the voice note." ?? "Kliknutím na tuto notifikaci se k připomínce dostanete.";
 
     Notifications.scheduleNotification(title, body, numericId, scheduledTime);
   }
 
-  void cancelScheduledNotifications() {
-    Notifications.cancelNotification(numericId);
+  void _scheduleRemindNotification() {
+    if (DateTime.now().isAfter(dueTime)) return;
+
+    final title = "Reminder!" ?? "Připomínka!";
+    final body = textContent ?? "Click on this notification to open the voice note." ?? "Kliknutím na tuto notifikaci se k připomínce dostanete.";
+
+    Notifications.scheduleNotification(title, body, 0, dueTime);
   }
 
   // Serialize this object into a JSON and return a String.

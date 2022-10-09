@@ -57,8 +57,8 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
     super.initState();
     onNotesUpdated.listen((noteId) {
       final Note note = _notes.firstWhere((note) => note.id == noteId);
-      note.cancelScheduledNotifications();
-      Alarm.cancel(note.numericId);
+      note.cancelNotifications();
+      //Alarm.cancel(note.numericId);
       setState(() {});
     });
   }
@@ -137,8 +137,8 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
     );
 
     note.saveToSharedPrefs();
-    note.schedulePreRemindNotification(5);
-    Alarm.setOneShot(dueTime, alarmCallback, note.numericId);
+    note.scheduleNotifications(5);
+    //Alarm.setOneShot(dueTime, alarmCallback, note.numericId);
     _notes.add(note);
   }
 

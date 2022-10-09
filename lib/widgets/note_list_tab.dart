@@ -100,6 +100,7 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
           opacity: _voiceButtonOpacity,
           onPress: () async {
             if (!(await Record().hasPermission())) return;
+            Vibration.vibrate(duration: 50);
             _openOverlay(_getRecordingOverlay());
           },
         ),
@@ -221,10 +222,7 @@ class _AddNoteButton extends StatelessWidget {
           opacity: opacity,
           duration: const Duration(milliseconds: 300),
           child: FloatingActionButton(
-            onPressed: () {
-              Vibration.vibrate(duration: 50);
-              onPress?.call();
-            },
+            onPressed: () => onPress?.call(),
             heroTag: type.toString(),
             child: Icon(type == NoteType.voiceNote
                 ? Icons.record_voice_over

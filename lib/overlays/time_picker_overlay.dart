@@ -83,7 +83,7 @@ class TimeButton extends StatelessWidget {
         if (datetime == null) return;
         onPicked(datetime);
       },
-      child: Text(timeToAdd != null ? "Za ${timeToAdd!.inMinutes} minut" : "Vlastní"),
+      child: Text(timeToAdd != null ? "In ${timeToAdd!.inMinutes} minutes" ?? "Za ${timeToAdd!.inMinutes} minut" : "Custom" ?? "Vlastní"),
     );
   }
 

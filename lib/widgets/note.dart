@@ -91,8 +91,9 @@ class Note extends StatefulWidget {
       minutesBefore = dueTime.difference(DateTime.now()).inMinutesRoundedUp();
     }
 
-    final title = "${recordingPath != null ? "Hlasová p" : "P"}řipomínka proběhne za $minutesBefore minut.";
-    final body = textContent ?? "Kliknutím na tuto notifikaci se dostanete k připomínce.";
+    final title = "${recordingPath != null ? "Voice n" : "N"}ote will take place in $minutesBefore minutes." ??
+        "${recordingPath != null ? "Hlasová p" : "P"}řipomínka proběhne za $minutesBefore minut.";
+    final body = textContent ?? "Click on this notification to open the note." ?? "Kliknutím na tuto notifikaci se dostanete k připomínce.";
 
     Notifications.scheduleNotification(title, body, numericId, scheduledTime);
   }
@@ -147,7 +148,8 @@ class _NoteState extends State<Note> {
   @override
   Widget build(BuildContext context) {
     final dueTimeInWords = getRemainingTimeInWords(widget.dueTime);
-    final creationTimeFormatted = "zádáno: ${DateFormat("d.M. H:mm").format(widget.creationTime!)}";
+    final creationTimeFormatted = "Created: ${DateFormat("d.M. H:mm").format(widget.creationTime!)}" ??
+        "zádáno: ${DateFormat("d.M. H:mm").format(widget.creationTime!)}";
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 1.0),
@@ -199,11 +201,13 @@ class _NoteState extends State<Note> {
     final now = DateTime.now();
 
     if (now.isAfter(dueTime) || now.isAtSameMomentAs(dueTime)) {
-      return "Proběhlo ${DateFormat("d.M. H:mm").format(dueTime)}";
+      return "Took place ${DateFormat("d.M. H:mm").format(dueTime)}" ??
+        "Proběhlo ${DateFormat("d.M. H:mm").format(dueTime)}";
     } else {
       final isTomorrow = now.day < dueTime.day;
       final differenceInWords = getDiffInWords(dueTime.difference(now));
-      return "Proběhne za $differenceInWords (${isTomorrow ? "zítra " : ""}v ${DateFormat("H:mm").format(dueTime)})";
+      return "Will take place in $differenceInWords (${isTomorrow ? "tomorrow " : ""}in ${DateFormat("H:mm").format(dueTime)})" ??
+        "Proběhne za $differenceInWords (${isTomorrow ? "zítra " : ""}v ${DateFormat("H:mm").format(dueTime)})";
     }
   }
 
@@ -214,7 +218,7 @@ class _NoteState extends State<Note> {
     final String minutesFormatted = minutes == 0 ? "" : "$minutes ${getUnitFormatted(minutes, UnitType.minutes)}";
     String hoursFormatted = hours == 0 ? "" : "$hours ${getUnitFormatted(hours, UnitType.hours)}";
 
-    if (minutesFormatted != "" && hoursFormatted != "") hoursFormatted += " a ";
+    if (minutesFormatted != "" && hoursFormatted != "") hoursFormatted += " and ";
 
     return "$hoursFormatted$minutesFormatted";
   }
@@ -222,9 +226,9 @@ class _NoteState extends State<Note> {
   String getUnitFormatted(int value, UnitType type) {
     bool inMinutes = type == UnitType.minutes;
 
-    final unitFormatFive = inMinutes ? "minut" : "hodin";
-    final unitFormatTwo = inMinutes ? "minuty" : "hodiny";
-    final unitFormatOne = inMinutes ? "minutu" : "hodinu";
+    final unitFormatFive = inMinutes ? "minutes" ?? "minut" : "hours" ?? "hodin";
+    final unitFormatTwo = inMinutes ? "minutes" ?? "minuty" : "hours" ?? "hodiny";
+    final unitFormatOne = inMinutes ? "minute" ?? "minutu" : "hour" ?? "hodinu";
     return value >= 5 ? unitFormatFive : value >= 2 ? unitFormatTwo : unitFormatOne;
   }
 }
@@ -277,7 +281,7 @@ class BottomPanel extends StatelessWidget {
         CreationTimeText(creationTimeText),
         TextButton(
           onPressed: onMarkDonePressed,
-          child: const Text('OZNAČIT ZA DOKONČENÉ'),
+          child: const Text("MARK DONE" ?? 'OZNAČIT ZA DOKONČENÉ'),
         ),
       ],
     );

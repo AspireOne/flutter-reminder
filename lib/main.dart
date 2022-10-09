@@ -36,13 +36,13 @@ class HomeScreenAppBar extends StatelessWidget with PreferredSizeWidget {
     return AppBar(
       shadowColor: Colors.transparent,
       title: const Text("ADHD Reminder"),
-      actions: [
+      /*actions: [
         IconButton(
             icon: const Icon(Icons.menu),
             onPressed: () => {}, // TODO: Open settings screen.
             tooltip: "Menu"
         )
-      ],
+      ],*/
     );
   }
 

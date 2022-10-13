@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_reminder/widgets/note.dart';
 
 import 'garbage_overlay.dart';
 
@@ -23,23 +24,23 @@ class _TimePickerOverlayState extends State<TimePickerOverlay> {
               //crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TimeButton(timeToAdd: const Duration(minutes: 5), onPicked: widget.onPicked),
-                TimeButton(timeToAdd: const Duration(minutes: 10), onPicked: widget.onPicked),
                 TimeButton(timeToAdd: const Duration(minutes: 15), onPicked: widget.onPicked),
-              ],
-            ),
-            Row(
-              //crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TimeButton(timeToAdd: const Duration(minutes: 20), onPicked: widget.onPicked),
                 TimeButton(timeToAdd: const Duration(minutes: 30), onPicked: widget.onPicked),
-                TimeButton(timeToAdd: const Duration(minutes: 45), onPicked: widget.onPicked),
               ],
             ),
             Row(
               //crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                TimeButton(timeToAdd: const Duration(minutes: 45), onPicked: widget.onPicked),
                 TimeButton(timeToAdd: const Duration(minutes: 60), onPicked: widget.onPicked),
+                TimeButton(timeToAdd: const Duration(minutes: 90), onPicked: widget.onPicked),
+              ],
+            ),
+            Row(
+              //crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 TimeButton(timeToAdd: const Duration(minutes: 120), onPicked: widget.onPicked),
+                TimeButton(timeToAdd: Duration.zero, onPicked: widget.onPicked),
                 TimeButton(onPicked: widget.onPicked),
               ],
             ),
@@ -67,23 +68,32 @@ class TimeButton extends StatelessWidget {
           ),
           height: 100,
           margin: const EdgeInsets.all(8),
-          child: _getButton(context),
+          child: _getTimeButton(context),
         )
     );
   }
 
-  TextButton _getButton(BuildContext context) {
+  TextButton _getTimeButton(BuildContext context) {
+    String text;
+    if (timeToAdd == null) {
+      text = 'Custom';
+    } else if (timeToAdd == Duration.zero) {
+      text = 'Never';
+    } else {
+      text = "In ${timeToAdd!.inMinutes} minutes";
+    }
+
     return TextButton(
       onPressed: () async {
         if (timeToAdd != null) {
-          onPicked(DateTime.now().add(timeToAdd!));
+          onPicked(timeToAdd == Duration.zero ? Note.dueTimeNever : DateTime.now().add(timeToAdd!));
           return;
         }
         var datetime = await pickTimeThroughTimePicker(context);
         if (datetime == null) return;
         onPicked(datetime);
       },
-      child: Text(timeToAdd != null ? "In ${timeToAdd!.inMinutes} minutes" ?? "Za ${timeToAdd!.inMinutes} minut" : "Custom" ?? "Vlastní"),
+      child: Text(text),
     );
   }
 

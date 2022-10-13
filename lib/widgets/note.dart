@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 enum UnitType { minutes, hours }
 
 class Note extends StatefulWidget {
+  static final DateTime dueTimeNever = DateTime.utc(275760,09,13);
   static const String keyPrefix = "_note";
   late final DateTime creationTime;
   late final int numericId;
@@ -32,6 +33,8 @@ class Note extends StatefulWidget {
     this.creationTime = creationTime ?? DateTime.now();
     this.numericId = notificationsId ?? _generateNumericId();
   }
+
+  bool isDue() => DateTime.now().isAfter(dueTime);
 
   static int _generateNumericId() {
     final random = Random();
@@ -137,7 +140,7 @@ class _NoteState extends State<Note> {
   @override
   void initState() {
     super.initState();
-    if (isDue()) return;
+    if (widget.isDue()) return;
 
     runStateUpdateTimer();
 
@@ -150,14 +153,12 @@ class _NoteState extends State<Note> {
     Timer.periodic(const Duration(minutes: 1), (Timer t) {
       if (mounted) setState(() => {});
       // If the note is due, remaining time is not shown, so theres nothing to update.
-      if (isDue()) {
+      if (widget.isDue()) {
         t.cancel();
         return;
       }
     });
   }
-
-  bool isDue() => DateTime.now().isAfter(widget.dueTime);
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +187,7 @@ class _NoteState extends State<Note> {
                 BottomPanel(
                     creationTimeFormatted,
                     // If the note is already due, then the button should be disabled.
-                    onMarkDonePressed: isDue() ? null : () {
+                    onMarkDonePressed: widget.isDue() ? null : () {
                       setState(() => widget.dueTime = DateTime.now());
                       widget.onDue?.call();
                       widget.updateInSharedPrefs();
@@ -212,6 +213,8 @@ class _NoteState extends State<Note> {
   }
 
   String getRemainingTimeInWords(DateTime dueTime) {
+    if (Note.dueTimeNever.isAtSameMomentAs(dueTime))
+      return "Not time limited" ?? "Časově neomezená";
     final now = DateTime.now();
 
     if (now.isAfter(dueTime) || now.isAtSameMomentAs(dueTime)) {

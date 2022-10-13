@@ -24,6 +24,7 @@ class _TextOverlayState extends State<TextOverlay> {
         Navigator.pop(context);
       }) : Dialog(
         child: TextField(
+          maxLength: 120,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             labelText: 'Note',

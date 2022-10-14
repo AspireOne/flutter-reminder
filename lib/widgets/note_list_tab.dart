@@ -67,24 +67,8 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
   Widget build(BuildContext context) {
     super.build(context);
 
-    var notesToShow = _notes.where((note) {
-      switch (widget.notesToShow) {
-        case NoteState.oncoming:
-          return note.dueTime.isAfter(DateTime.now());
-        case NoteState.completed:
-          return note.dueTime.isBefore(DateTime.now());
-        default:
-          return true;
-      }
-    }).toList();
-
-    if (widget.notesToShow == NoteState.completed) {
-      notesToShow.sort((a, b) => b.creationTime.compareTo(a.creationTime));
-      //notesToShow.sort((a, b) => b.dueTime.compareTo(a.dueTime));
-      notesToShow = notesToShow.take(10).toList();
-    } else {
-      notesToShow.sort((a, b) => b.creationTime.compareTo(a.creationTime));
-    }
+    var notesToShow = _filterNotes().toList();
+    _sortNotes(notesToShow);
 
     return Scaffold(
       floatingActionButton: !widget.showButtons ? null : _AddNoteButtons(
@@ -112,6 +96,33 @@ class _NoteListTabState extends State<NoteListTab> with AutomaticKeepAliveClient
             : "No completed notes",
       )
     );
+  }
+
+  Iterable<Note> _filterNotes() {
+    return _notes.where((note) {
+      switch (widget.notesToShow) {
+        case NoteState.oncoming:
+          return note.dueTime.isAfter(DateTime.now());
+        case NoteState.completed:
+          return note.dueTime.isBefore(DateTime.now());
+        default:
+          return true;
+      }
+    });
+  }
+
+  void _sortNotes(List<Note> notes) {
+    if (widget.notesToShow == NoteState.completed) {
+      notes.sort((a, b) => b.dueTime.compareTo(a.dueTime));
+      //notesToShow.sort((a, b) => b.dueTime.compareTo(a.dueTime));
+      notes = notes.take(10).toList();
+    } else {
+      notes.sort((a, b) {
+        if (a.dueTime == Note.dueTimeNever) return -1;
+        //if (b.dueTime == Note.dueTimeNever) return 1;
+        return a.dueTime.compareTo(b.dueTime);
+      });
+    }
   }
 
   void _openOverlay(Widget overlay) async {

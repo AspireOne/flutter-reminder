@@ -93,7 +93,7 @@ class TimeButton extends StatelessWidget {
         if (datetime == null) return;
         onPicked(datetime);
       },
-      child: Text(text),
+      child: Text(text, textAlign: TextAlign.center),
     );
   }
 
